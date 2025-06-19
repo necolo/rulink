@@ -8,9 +8,7 @@
     "test:run": "pnpm --filter @necolo/cursor-rules test:run",
     "test:coverage": "pnpm --filter @necolo/cursor-rules test:coverage",
     "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "pnpm version-packages && pnpm build && changeset publish",
-    "publish": "pnpm release"
+    "test-release": "pnpm build && changeset publish --dry-run"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
