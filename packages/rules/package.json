@@ -1,0 +1,14 @@
+{
+  "name": "@necolo/cursor-rules-data",
+  "version": "0.2.0",
+  "description": "Cursor AI rules data package",
+  "main": "./package.json",
+  "files": [
+    "typescript",
+    "react",
+    "general"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
