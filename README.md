@@ -368,12 +368,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - **💬 Discussions**: [GitHub Discussions](https://github.com/necolo/cursor-rules/discussions)
 - **📧 Email**: Open an issue for any questions
 
-## 🙏 Acknowledgments
-
-- [Cursor AI](https://cursor.sh/) - For creating an amazing AI-powered code editor
-- Contributors - Thank you to everyone who has contributed rules and improvements
-- Community - For feedback and suggestions that make this project better
-
 ## 🗺️ Roadmap
 
 - [ ] Add more programming language support
@@ -383,10 +377,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - [ ] Integration with popular IDEs
 
 ---
-
-<p align="center">
-  <strong>Made with ❤️ for the <a href="https://cursor.sh/">Cursor AI</a> community</strong>
-</p>
 
 <p align="center">
   <a href="https://github.com/necolo/cursor-rules/stargazers">⭐ Star this repo</a> •
