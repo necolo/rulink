@@ -1,5 +1,11 @@
 # @necolo/cursor-rules
 
+## 0.2.1
+
+### Patch Changes
+
+- [`53dd2f4`](https://github.com/necolo/cursor-rules/commit/53dd2f425a2fc0522a5a67506177751bd91ba5c3) Thanks [@necolo](https://github.com/necolo)! - update readme.md
+
 ## 0.2.0
 
 ### Minor Changes
