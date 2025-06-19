@@ -10,7 +10,10 @@
     "test:coverage": "pnpm --filter @necolo/cursor-rules test:coverage",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm version-packages && pnpm build && changeset publish",
+    "publish": "pnpm release",
+    "release:prepare": "pnpm changeset && pnpm version-packages && git add . && git commit -m \"Release: Version packages\"",
+    "release:full": "pnpm release:prepare && pnpm build && changeset publish"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",

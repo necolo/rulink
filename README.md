@@ -273,6 +273,40 @@ pnpm test
 - `pnpm test` - Run all tests
 - `pnpm sync-rules` - Sync rules between packages
 - `pnpm changeset` - Create a changeset for releases
+- `pnpm publish` - Publish packages to npm (simplified workflow)
+
+### Publishing Releases
+
+The repository is set up with an automated release workflow using changesets. Here's the simplified process:
+
+#### Quick Release (Recommended)
+
+```bash
+# 1. Create changeset (describes what changed)
+pnpm changeset
+
+# 2. Publish everything
+pnpm publish
+```
+
+#### Release Options
+
+- **`pnpm publish`** - Quick publish (versions + builds + publishes)
+- **`pnpm release:full`** - Full automated release (includes changeset creation)
+- **`pnpm release:prepare`** - Prepare release (changeset + version + commit)
+
+#### Detailed Steps
+
+When you run `pnpm publish`, it automatically:
+- ✅ Applies existing changesets and versions packages
+- ✅ Builds all packages  
+- ✅ Publishes to npm
+- ✅ Creates git tags
+
+The changeset step is kept separate because it requires your input about:
+- What changed in this release
+- Type of release (patch/minor/major)
+- Release notes for the changelog
 
 ## 🤝 Contributing
 
