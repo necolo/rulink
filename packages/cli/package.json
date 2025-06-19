@@ -10,7 +10,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -18,7 +19,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "cp ../../README.md . && pnpm build",
+    "postpublish": "rm -f README.md"
   },
   "dependencies": {
     "@necolo/cursor-rules-data": "workspace:*",

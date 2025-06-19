@@ -277,34 +277,48 @@ pnpm test
 
 ### Publishing Releases
 
-The repository is set up with an automated release workflow using changesets. Here's the simplified process:
+The repository uses GitHub Actions for automated releases. The process is simple:
 
-#### Quick Release (Recommended)
+#### Release Steps
 
 ```bash
 # 1. Create changeset (describes what changed)
 pnpm changeset
 
-# 2. Publish everything
-pnpm publish
+# 2. Commit and push to main branch
+git add .
+git commit -m "Add changeset for [feature/fix description]"
+git push origin main
+
+# 3. GitHub Actions automatically handles the rest! 🚀
 ```
 
-#### Release Options
+#### What Happens Automatically
 
-- **`pnpm publish`** - Quick publish (versions + builds + publishes)
-- **`pnpm release:full`** - Full automated release (includes changeset creation)
-- **`pnpm release:prepare`** - Prepare release (changeset + version + commit)
+When you push to the `main` branch, GitHub Actions will:
+- ✅ Build all packages
+- ✅ Apply changesets and version packages  
+- ✅ Publish to npm
+- ✅ Create git tags
+- ✅ Generate release notes
 
-#### Detailed Steps
+#### Alternative: Manual Release (for testing)
 
-When you run `pnpm publish`, it automatically:
-- ✅ Applies existing changesets and versions packages
-- ✅ Builds all packages  
-- ✅ Publishes to npm
-- ✅ Creates git tags
+If you need to release manually for testing purposes:
 
-The changeset step is kept separate because it requires your input about:
-- What changed in this release
+```bash
+# Full manual release
+pnpm release
+```
+
+#### Important Notes
+
+- **Only push to main when ready to release** - Every push to main triggers a release
+- **Always create changesets first** - They describe what changed and determine version bumps
+- **Changesets are required** - Without them, no release will be created
+
+The changeset step is manual because it requires your input about:
+- What changed in this release  
 - Type of release (patch/minor/major)
 - Release notes for the changelog
 
