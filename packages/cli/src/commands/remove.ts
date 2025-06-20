@@ -1,10 +1,18 @@
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import colors from 'picocolors';
+import type { CAC } from 'cac';
 import { findProjectRoot } from '../utils/project-detector.js';
-import { listAvailableRules } from '../utils/rules-manager.js';
 
-export async function removeCommand(categories: string[]): Promise<void> {
+export function registerRemoveCommand(cli: CAC) {
+  cli
+    .command('remove [...ruleFiles]', 'Remove cursor rules by filename (e.g., style.mdc)')
+    .action(async (ruleFiles: string[]) => {
+      await removeCommand(ruleFiles);
+    });
+}
+
+export async function removeCommand(ruleFiles: string[]): Promise<void> {
   try {
     // Find target project
     const projectRoot = await findProjectRoot(process.cwd());
@@ -24,20 +32,22 @@ export async function removeCommand(categories: string[]): Promise<void> {
       process.exit(1);
     }
     
-    const availableRules = await listAvailableRules();
-    const rulesToRemove = availableRules.filter(rule => categories.includes(rule.category));
-    
     let removedCount = 0;
     
-    for (const rule of rulesToRemove) {
-      const ruleFilePath = join(rulesPath, `${rule.name}.mdc`);
+    for (const ruleFile of ruleFiles) {
+      // Extract filename from path (e.g., "typescript/style.mdc" -> "style.mdc")
+      const filename = ruleFile.includes('/') ? ruleFile.split('/').pop()! : ruleFile;
+      
+      // Ensure .mdc extension
+      const mdcFilename = filename.endsWith('.mdc') ? filename : `${filename}.mdc`;
+      const ruleFilePath = join(rulesPath, mdcFilename);
       
       try {
         await fs.unlink(ruleFilePath);
-        console.log(colors.green(`Removed: ${rule.category}/${rule.name}`));
+        console.log(colors.green(`Removed: ${mdcFilename}`));
         removedCount++;
       } catch (error) {
-        console.log(colors.yellow(`File not found: ${rule.category}/${rule.name}`));
+        console.log(colors.yellow(`File not found: ${mdcFilename}`));
       }
     }
     

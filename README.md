@@ -1,6 +1,6 @@
-# @necolo/cursor-rules
+# rulink
 
-> A CLI tool and comprehensive collection of curated rules for [Cursor AI](https://cursor.sh/) to enhance your coding experience across different technology stacks.
+> A flexible CLI tool for managing [Cursor AI](https://cursor.sh/) rules from multiple sources - local folders, GitHub repositories, and NPM packages.
 
 [![npm version](https://badge.fury.io/js/%40necolo%2Fcursor-rules.svg)](https://badge.fury.io/js/%40necolo%2Fcursor-rules)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,14 +8,19 @@
 ## 🚀 Quick Start
 
 ```bash
-# Use directly with npx (no installation required)
-npx @necolo/cursor-rules install react typescript
+# Add a rule source (local folder, GitHub repo, or NPM package)
+npx rulink source add /path/to/local/rules
+npx rulink source add --github github.com/user/awesome-cursor-rules
+npx rulink source add --npm @company/cursor-rules
 
-# List available rule categories
-npx @necolo/cursor-rules list
+# List available sources
+npx rulink source list
 
-# Check current project status
-npx @necolo/cursor-rules status
+# Install specific rule files
+npx rulink install style.mdc typescript/code-style.mdc
+
+# List available rules from active source
+npx rulink list
 ```
 
 ## 📦 Installation
@@ -25,13 +30,13 @@ npx @necolo/cursor-rules status
 No installation required! Use directly:
 
 ```bash
-npx @necolo/cursor-rules <command>
+npx rulink <command>
 ```
 
 ### Global Installation
 
 ```bash
-npm install -g @necolo/cursor-rules
+npm install -g rulink
 # Then use without npx prefix
 cursor-rules install react typescript
 ```
@@ -39,7 +44,7 @@ cursor-rules install react typescript
 ### Local Installation
 
 ```bash
-npm install --save-dev @necolo/cursor-rules
+npm install --save-dev rulink
 # Then use with npx
 npx cursor-rules --help
 ```
@@ -49,106 +54,210 @@ npx cursor-rules --help
 Cursor rules are configuration files that help [Cursor AI](https://cursor.sh/) understand your coding standards, patterns, and preferences. They guide the AI to generate code that follows your project's conventions automatically.
 
 This CLI helps you:
-- 📋 **Install** curated rule sets for different tech stacks
-- 🔄 **Update** rules to the latest versions
-- 📊 **Track** which rules are installed in your projects
+- 📂 **Manage** multiple rule sources (local folders, GitHub repos, NPM packages)
+- 📋 **Install** specific rule files to your projects
+- 🔄 **Update** rules from their sources
 - 🗑️ **Remove** rules you no longer need
+- 🔄 **Switch** between different rule sources
 
 ## 📚 CLI Commands
 
-> **Note**: All examples below use `npx @necolo/cursor-rules`. If you've installed globally, you can use `cursor-rules` directly.
+> **Note**: All examples below use `npx rulink`. If you've installed globally, you can use `cursor-rules` directly.
 
-### `install <categories...>`
+### Source Management
 
-Install cursor rules for specified categories.
+#### `source add <input>`
+
+Add a new rule source. The CLI auto-detects the source type based on the input format.
 
 ```bash
-# Install React and TypeScript rules
-npx @necolo/cursor-rules install react typescript
+# Add local folder (auto-detected)
+npx rulink source add /path/to/local/rules
 
-# Install to specific directory
-npx @necolo/cursor-rules install react --to /path/to/project
+# Add GitHub repository
+npx rulink source add --github github.com/user/awesome-cursor-rules
+npx rulink source add --github https://github.com/user/awesome-cursor-rules
 
-# Preview what would be installed
-npx @necolo/cursor-rules install react --dry-run
+# Add NPM package
+npx rulink source add --npm @company/cursor-rules
 
-# Verbose output
-npx @necolo/cursor-rules install react --verbose
+# GitHub with specific branch and path
+npx rulink source add --github github.com/user/repo --branch develop --path rules/folder
 ```
 
 **Options:**
-- `--to <path>` - Target path to install rules (defaults to current project root)
-- `--dry-run` - Show what would be installed without making changes
+- `--github` - Specify input as GitHub repository
+- `--npm` - Specify input as NPM package
+- `--branch <branch>` - GitHub branch to use (default: main)
+- `--path <path>` - Path within GitHub repository
 - `--verbose` - Show detailed output
 
-### `list`
+#### `source list`
 
-List all available cursor rule categories and their descriptions.
+List all configured sources and show which one is active.
 
 ```bash
-npx @necolo/cursor-rules list
+npx rulink source list
 ```
 
 Example output:
 ```
-Available Cursor Rules:
+Configured Sources:
 
-general/
-  - basic-principles
-  - doc
-  - riper-5
+● my-local-rules (active)
+  Type: local
+  Path: /Users/me/cursor-rules
 
-react/
-  - ts-react
-
-typescript/
-  - style
+○ awesome-prompts
+  Type: github
+  URL: https://github.com/user/awesome-cursor-rules
+  Branch: main
 ```
 
-### `status`
+#### `source use <name>`
+
+Set the active source for rule operations.
+
+```bash
+npx rulink source use awesome-prompts
+```
+
+#### `source remove <name>`
+
+Remove a configured source.
+
+```bash
+npx rulink source remove awesome-prompts
+```
+
+### Rule Installation
+
+#### `install <rulePaths...>`
+
+Install specific rule files from the active source.
+
+```bash
+# Install specific rule files
+npx rulink install style.mdc typescript/code-style.mdc
+
+# Install to specific directory
+npx rulink install style.mdc --to /path/to/project
+
+# Use a different source temporarily
+npx rulink install style.mdc --source my-other-source
+
+# Preview what would be installed
+npx rulink install style.mdc --dry-run
+
+# Verbose output
+npx rulink install style.mdc --verbose
+```
+
+**Options:**
+- `--to <path>` - Target path to install rules (defaults to current project root)
+- `--source <name>` - Use specific source instead of active source
+- `--dry-run` - Show what would be installed without making changes
+- `--verbose` - Show detailed output
+
+### Other Commands
+
+#### `list`
+
+List all available rules from the active source.
+
+```bash
+# List from active source
+npx rulink list
+
+# List from specific source
+npx rulink list --source my-other-source
+```
+
+Example output:
+```
+Available Rules from my-local-rules:
+
+style.mdc
+doc.mdc
+
+typescript/
+  - code-style.mdc
+  - best-practices.mdc
+```
+
+#### `update`
+
+Update all installed rules by reinstalling them from their sources.
+
+```bash
+npx rulink update
+```
+
+#### `remove <ruleFiles...>`
+
+Remove installed rule files from the current project.
+
+```bash
+npx rulink remove style.mdc typescript/code-style.mdc
+```
+
+#### `status`
 
 Show the status of installed rules in the current project.
 
 ```bash
-npx @necolo/cursor-rules status
+npx rulink status
 ```
 
-### `update`
+## 📂 Rule Source Examples
 
-Update all installed rules to their latest versions.
+The CLI supports multiple source types for maximum flexibility:
 
+### 🗂️ Local Folders
+Store rules in any local directory structure:
 ```bash
-npx @necolo/cursor-rules update
+my-rules/
+├── style.mdc
+├── documentation.mdc
+└── typescript/
+    ├── best-practices.mdc
+    └── code-style.mdc
 ```
 
-### `remove <categories...>`
-
-Remove cursor rules for specified categories.
-
+### 📦 NPM Packages
+Publish and share rules via NPM:
 ```bash
-npx @necolo/cursor-rules remove react typescript
+@company/cursor-rules/
+├── package.json
+├── general.mdc
+└── react/
+    └── standards.mdc
 ```
 
-## 📂 Available Rule Categories
+### 🐙 GitHub Repositories
+Share rules through GitHub repositories:
+```bash
+awesome-cursor-rules/
+├── README.md
+├── basic-principles.mdc
+└── languages/
+    ├── typescript.mdc
+    └── python.mdc
+```
 
-### 🌐 General
-- **[basic-principles](./packages/rules/general/basic-principles.mdc)** - Core programming philosophy and design principles (SOLID, KISS, YAGNI)
-- **[doc](./packages/rules/general/doc.mdc)** - Documentation standards and README maintenance guidelines  
-- **[riper-5](./packages/rules/general/riper-5.mdc)** - Strict operational protocol for AI assistance and code collaboration
-
-### ⚛️ React
-- **[ts-react](./packages/rules/react/ts-react.mdc)** - Comprehensive React + TypeScript development standards and best practices
-
-### 📘 TypeScript
-- **[style](./packages/rules/typescript/style.mdc)** - TypeScript coding style guidelines and import path conventions
+### Example Rule Collections
+- **[necolo/cursor-rules](https://github.com/necolo/cursor-rules)** - This repository's rule collection
+- Create your own and share with the community!
 
 ## 🏗️ How It Works
 
-1. **Project Detection**: The CLI automatically finds your project root by looking for common project files (`package.json`, `.git`, etc.)
+1. **Source Management**: Configure rule sources (local folders, GitHub repos, NPM packages) globally in `~/.cursor-rules/config.json`
 
-2. **Rules Installation**: Rules are installed to your project's `.cursor/rules/` directory
+2. **Project Detection**: The CLI automatically finds your project root by looking for common project files (`package.json`, `.git`, etc.)
 
-3. **File Management**: Each rule category contains `.mdc` files that Cursor AI reads to understand your preferences
+3. **Rule Installation**: Specific rule files are downloaded from your active source and installed to your project's `.cursor/rules/` directory
+
+4. **Fresh Fetching**: Rules are fetched fresh from their sources each time, ensuring you always get the latest versions
 
 When you install rules, they're organized like this:
 
@@ -156,52 +265,91 @@ When you install rules, they're organized like this:
 your-project/
 └── .cursor/
     └── rules/
-        ├── basic-principles.mdc
-        ├── doc.mdc
-        ├── riper-5.mdc
-        ├── ts-react.mdc
-        └── style.mdc
+        ├── style.mdc
+        ├── documentation.mdc
+        ├── best-practices.mdc
+        └── code-style.mdc
+```
+
+Global configuration is stored at:
+```
+~/.cursor-rules/
+└── config.json    # Your configured sources and active source
 ```
 
 ## 📖 Usage Examples
 
-### Setting up a new React TypeScript project
+### Setting up rule sources
+
+```bash
+# Add your company's rule collection
+npx rulink source add --npm @mycompany/cursor-rules
+
+# Add a popular GitHub rule collection
+npx rulink source add --github github.com/awesome-dev/cursor-rules
+
+# Add your personal local rules
+npx rulink source add ~/my-cursor-rules
+
+# List available sources
+npx rulink source list
+```
+
+### Installing rules to a project
 
 ```bash
 # Navigate to your project
 cd my-react-app
 
-# Install React and TypeScript rules  
-npx @necolo/cursor-rules install react typescript general
+# Install specific rule files
+npx rulink install style.mdc typescript/best-practices.mdc
 
 # Check what was installed
-npx @necolo/cursor-rules status
+npx rulink status
 ```
 
-### Updating rules across multiple projects
+### Working with multiple sources
 
 ```bash
-# In each project directory
-npx @necolo/cursor-rules update
+# Switch to a different source
+npx rulink source use company-rules
 
-# Or specify a path
-npx @necolo/cursor-rules install react --to ./my-other-project
+# Install from a specific source without switching
+npx rulink install style.mdc --source personal-rules
+
+# Install to a different project
+npx rulink install style.mdc --to ./my-other-project
 ```
 
-### Preview before installing
+### Preview and management
 
 ```bash
 # See what would be installed
-npx @necolo/cursor-rules install react typescript --dry-run
+npx rulink install style.mdc --dry-run
+
+# List available rules from active source
+npx rulink list
+
+# Update all installed rules
+npx rulink update
 ```
 
 ## 🎯 Project Overview
 
-This monorepo provides:
+This project provides a flexible CLI tool for managing Cursor AI rules from multiple sources:
 
-- **📦 CLI Tool** - Easy installation and management of cursor rules across projects
-- **📚 Rule Collections** - Curated sets of coding standards and AI prompts for popular tech stacks
-- **🔧 Developer Tools** - Scripts and utilities for maintaining and syncing rules
+- **📦 CLI Tool** - Manage rules from local folders, GitHub repos, and NPM packages
+- **🔄 Source Management** - Configure and switch between multiple rule sources
+- **📚 Example Rules** - Sample rule collections to get you started
+- **🌐 Community** - Share and discover rule collections
+
+### Key Features
+
+- **Multi-Source Support**: Local folders, GitHub repositories, NPM packages
+- **Global Configuration**: Manage sources globally, install rules per-project
+- **Fresh Fetching**: Always get the latest rules from their sources
+- **Flexible Structure**: Support for flat or categorized rule organization
+- **Authentication**: GitHub integration with git credentials for private repos
 
 ### Repository Structure
 
@@ -211,15 +359,14 @@ cursor-rules/
 │   ├── cli/                    # CLI tool for managing rules
 │   │   ├── src/
 │   │   │   ├── commands/       # CLI command implementations
-│   │   │   ├── utils/          # Helper utilities
+│   │   │   ├── sources/        # Source provider implementations
+│   │   │   ├── config/         # Configuration management
 │   │   │   └── index.ts        # Main CLI entry point
 │   │   └── package.json
-│   └── rules/                  # Rule collections
+│   └── rules/                  # Example rule collections
 │       ├── general/           # General coding standards
 │       ├── react/             # React-specific rules
 │       └── typescript/        # TypeScript-specific rules
-├── scripts/
-│   └── sync-rules.ts          # Script to sync rules between packages
 └── package.json               # Monorepo configuration
 ```
 
@@ -247,33 +394,29 @@ pnpm build
 pnpm test
 ```
 
-### Working with Rules
+### Working with the CLI
 
-#### Adding New Rules
+#### Adding New Source Providers
 
-1. Create a new `.mdc` file in the appropriate category under [`packages/rules/`](./packages/rules)
-2. Follow the existing naming convention and structure
-3. Run the sync script to update package references:
-   ```bash
-   pnpm sync-rules
-   ```
-4. Test your changes with the CLI
+1. Create a new provider class in [`packages/cli/src/sources/providers/`](./packages/cli/src/sources/providers/)
+2. Implement the `SourceProvider` interface
+3. Add the provider to the `SourceManager`
+4. Add tests and documentation
 
-#### Adding New Categories
+#### Contributing Rules
 
-1. Create a new directory under [`packages/rules/`](./packages/rules)
-2. Add your rule files to the new category
-3. Update the CLI code to recognize the new category
-4. Add documentation and tests
+1. Create your own rule collection repository or NPM package
+2. Follow the structure: `.mdc` files in root or single-level subdirectories
+3. Share your collection with the community
+4. Add it to the examples in this README
 
 ### Scripts
 
 - `pnpm build` - Build all packages
 - `pnpm dev` - Start development mode for CLI
 - `pnpm test` - Run all tests
-- `pnpm sync-rules` - Sync rules between packages
 - `pnpm changeset` - Create a changeset for releases
-- `pnpm publish` - Publish packages to npm (simplified workflow)
+- `pnpm publish` - Publish packages to npm
 
 ### Publishing Releases
 
@@ -344,18 +487,22 @@ We welcome contributions! Here's how you can help:
 - Use meaningful commit messages
 - Ensure all tests pass before submitting
 
-### Contributing New Rules
+### Creating Your Own Rule Collection
 
 ```bash
-# Create a new rule file
-echo "# My Custom Rule\n\n- Rule description here" > packages/rules/react/my-custom-rule.mdc
+# Create a new rule collection
+mkdir my-cursor-rules
+cd my-cursor-rules
 
-# Sync the changes
-pnpm sync-rules
+# Add some rules
+echo "# Style Guidelines\n\n- Use 2 spaces for indentation" > style.mdc
+mkdir typescript
+echo "# TypeScript Best Practices\n\n- Use strict mode" > typescript/best-practices.mdc
 
-# Test the new rule
-pnpm build
-npx @necolo/cursor-rules list
+# Test with the CLI
+npx rulink source add /path/to/my-cursor-rules
+npx rulink list
+npx rulink install style.mdc
 ```
 
 ## 📄 License
@@ -370,11 +517,13 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 🗺️ Roadmap
 
-- [ ] Add more programming language support
+- [ ] Add more source provider types (GitLab, Bitbucket, etc.)
 - [ ] Implement rule validation and linting
-- [ ] Create web interface for rule management
+- [ ] Create web interface for rule source discovery
 - [ ] Add rule templates and generators
-- [ ] Integration with popular IDEs
+- [ ] Enhanced authentication for private sources
+- [ ] Rule dependency management
+- [ ] Integration with popular IDEs beyond Cursor
 
 ---
 

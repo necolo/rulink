@@ -3,17 +3,17 @@
   "private": true,
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm --filter @necolo/cursor-rules dev",
-    "test": "pnpm --filter @necolo/cursor-rules test",
-    "test:run": "pnpm --filter @necolo/cursor-rules test:run",
-    "test:coverage": "pnpm --filter @necolo/cursor-rules test:coverage",
+    "watch": "pnpm --filter rulink watch",
+    "dev": "pnpm --filter rulink dev",
+    "test": "pnpm --filter rulink test",
+    "test:run": "pnpm --filter rulink test:run",
+    "test:coverage": "pnpm --filter rulink test:coverage",
     "changeset": "changeset",
     "test-release": "pnpm build && changeset publish --dry-run"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.27.1",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   }
 }

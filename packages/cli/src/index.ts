@@ -1,55 +1,28 @@
 #!/usr/bin/env node
 
 import { cac } from 'cac';
-import colors from 'picocolors';
-import { installCommand } from './commands/install.js';
-import { removeCommand } from './commands/remove.js';
-import { updateCommand } from './commands/update.js';
-import { listCommand } from './commands/list.js';
-import { statusCommand } from './commands/status.js';
+import { registerInstallCommand } from './commands/install';
+import { registerListCommand } from './commands/list';
+import { registerRemoveCommand } from './commands/remove';
+import { registerSourceCommands } from './commands/source';
+import { registerStatusCommand } from './commands/status';
+import { registerUpdateCommand } from './commands/update';
+import { NAME, VERSION } from './variables';
 
-const cli = cac('cursor-rules');
+const cli = cac(NAME);
 
-cli
-  .command('install [...categories]', 'Install cursor rules for specified categories')
-  .option('--to <path>', 'Target path to install rules')
-  .option('--dry-run', 'Show what would be installed without making changes')
-  .option('--verbose', 'Verbose output')
-  .action(async (categories: string[], options) => {
-    await installCommand(categories, options);
-  });
-
-cli
-  .command('remove [...categories]', 'Remove cursor rules for specified categories')
-  .action(async (categories: string[]) => {
-    await removeCommand(categories);
-  });
-
-cli
-  .command('update', 'Update all installed rules to latest version')
-  .action(async () => {
-    await updateCommand();
-  });
-
-cli
-  .command('list', 'List all available cursor rules')
-  .action(async () => {
-    await listCommand();
-  });
-
-cli
-  .command('status', 'Show status of installed rules in current project')
-  .action(async () => {
-    await statusCommand();
-  });
+registerInstallCommand(cli);
+registerRemoveCommand(cli);
+registerUpdateCommand(cli);
+registerListCommand(cli);
+registerStatusCommand(cli);
+registerSourceCommands(cli);
 
 cli.help();
-cli.version('0.1.0');
+cli.version(VERSION);
 
 export default function main() {
   cli.parse();
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
-} 
+main();

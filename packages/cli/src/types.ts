@@ -4,12 +4,14 @@ export interface RuleMetadata {
   description?: string;
   globs?: string[];
   alwaysApply?: boolean;
+  absolutePath?: string;
 }
 
 export interface InstallOptions {
   targetPath?: string;
   dryRun?: boolean;
   verbose?: boolean;
+  source?: string;
 }
 
 export interface ProjectInfo {

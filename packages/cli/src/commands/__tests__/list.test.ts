@@ -1,9 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { listCommand } from '../list.js';
 
 // Mock modules
-vi.mock('../../utils/rules-manager.js', () => ({
-  listAvailableRules: vi.fn()
+vi.mock('../../sources/source-manager.js', () => ({
+  sourceManager: {
+    getActiveSource: vi.fn(),
+    listRules: vi.fn(),
+  }
 }));
 
 vi.mock('picocolors', () => ({
@@ -17,55 +20,54 @@ vi.mock('picocolors', () => ({
 }));
 
 // Mock process and console
-const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+vi.spyOn(console, 'log').mockImplementation(() => {});
+vi.spyOn(console, 'error').mockImplementation(() => {});
 
-import { listAvailableRules } from '../../utils/rules-manager.js';
+import { sourceManager } from '../../sources/source-manager.js';
 
-const mockListAvailableRules = vi.mocked(listAvailableRules);
+const mockExit = vi.mocked(process.exit);
+const mockConsoleLog = vi.mocked(console.log);
+const mockConsoleError = vi.mocked(console.error);
+const mockSourceManager = vi.mocked(sourceManager);
 
 describe('list command', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExit.mockClear();
-    mockConsoleLog.mockClear();
-    mockConsoleError.mockClear();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
   });
 
   it('should list available rules grouped by category', async () => {
     const mockRules = [
-      { category: 'typescript', name: 'strict-types', description: 'TypeScript strict typing', globs: undefined, alwaysApply: undefined },
-      { category: 'typescript', name: 'react-components', description: undefined, globs: undefined, alwaysApply: undefined },
-      { category: 'react', name: 'component-standards', description: 'React component best practices', globs: undefined, alwaysApply: undefined },
-      { category: 'general', name: 'code-style', description: undefined, globs: undefined, alwaysApply: undefined }
+      { category: 'typescript', name: 'strict-types', description: 'TypeScript strict typing' },
+      { category: 'typescript', name: 'react-components', description: undefined },
+      { category: 'react', name: 'component-standards', description: 'React component best practices' },
+      { category: 'general', name: 'code-style', description: undefined },
+      { category: 'default', name: 'default-rule', description: undefined },
     ];
 
-    mockListAvailableRules.mockResolvedValue(mockRules);
+    mockSourceManager.getActiveSource.mockResolvedValue({ name: 'test-source', path: '/path', type: 'local' });
+    mockSourceManager.listRules.mockResolvedValue(mockRules);
 
     await listCommand();
 
-    expect(mockConsoleLog).toHaveBeenCalledWith('Available Cursor Rules:');
-    expect(mockConsoleLog).toHaveBeenCalledWith();
+    expect(mockConsoleLog).toHaveBeenCalledWith('Available Rules from test-source:');
     expect(mockConsoleLog).toHaveBeenCalledWith('typescript/');
-    expect(mockConsoleLog).toHaveBeenCalledWith('  - strict-types');
-    expect(mockConsoleLog).toHaveBeenCalledWith('  - react-components');
+    expect(mockConsoleLog).toHaveBeenCalledWith('  - strict-types.mdc');
+    expect(mockConsoleLog).toHaveBeenCalledWith('  - react-components.mdc');
     expect(mockConsoleLog).toHaveBeenCalledWith('react/');
-    expect(mockConsoleLog).toHaveBeenCalledWith('  - component-standards');
+    expect(mockConsoleLog).toHaveBeenCalledWith('  - component-standards.mdc');
     expect(mockConsoleLog).toHaveBeenCalledWith('general/');
-    expect(mockConsoleLog).toHaveBeenCalledWith('  - code-style');
+    expect(mockConsoleLog).toHaveBeenCalledWith('  - code-style.mdc');
+    expect(mockConsoleLog).toHaveBeenCalledWith('default-rule.mdc');
   });
 
   it('should display rule descriptions when available', async () => {
     const mockRules = [
-      { category: 'typescript', name: 'strict-types', description: 'TypeScript strict typing rules', globs: undefined, alwaysApply: undefined }
+      { category: 'typescript', name: 'strict-types', description: 'TypeScript strict typing rules' }
     ];
 
-    mockListAvailableRules.mockResolvedValue(mockRules);
+    mockSourceManager.getActiveSource.mockResolvedValue({ name: 'test-source', path: '/path', type: 'local' });
+    mockSourceManager.listRules.mockResolvedValue(mockRules);
 
     await listCommand();
 
@@ -73,21 +75,30 @@ describe('list command', () => {
   });
 
   it('should handle empty rules list', async () => {
-    mockListAvailableRules.mockResolvedValue([]);
+    mockSourceManager.getActiveSource.mockResolvedValue({ name: 'test-source', path: '/path', type: 'local' });
+    mockSourceManager.listRules.mockResolvedValue([]);
 
     await listCommand();
 
-    expect(mockConsoleLog).toHaveBeenCalledWith('Available Cursor Rules:');
-    expect(mockConsoleLog).toHaveBeenCalledWith();
+    expect(mockConsoleLog).toHaveBeenCalledWith('Available Rules from test-source:');
+    expect(mockConsoleLog).toHaveBeenCalledWith('No rules found in this source.');
+  });
+
+  it('should handle no active source', async () => {
+    mockSourceManager.getActiveSource.mockResolvedValue(null);
+
+    await listCommand();
+
+    expect(mockConsoleLog).toHaveBeenCalledWith('No active source configured.');
   });
 
   it('should handle errors gracefully', async () => {
     const error = new Error('Failed to read rules');
-    mockListAvailableRules.mockRejectedValue(error);
+    mockSourceManager.getActiveSource.mockRejectedValue(error);
 
     await listCommand();
 
-    expect(mockConsoleError).toHaveBeenCalledWith('Error: Error: Failed to read rules');
+    expect(mockConsoleError).toHaveBeenCalledWith(`Error: ${error}`);
     expect(mockExit).toHaveBeenCalledWith(1);
   });
 }); 

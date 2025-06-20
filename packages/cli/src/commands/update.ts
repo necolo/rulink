@@ -1,29 +1,55 @@
+import { join } from 'path';
+import { promises as fs } from 'fs';
 import colors from 'picocolors';
-import { getLatestVersion, getCurrentVersion } from '../utils/npm-client.js';
+import type { CAC } from 'cac';
+import { findProjectRoot } from '../utils/project-detector.js';
 import { installCommand } from './install.js';
-import { listAvailableRules } from '../utils/rules-manager.js';
+
+export function registerUpdateCommand(cli: CAC) {
+  cli
+    .command('update', 'Update all installed rules to latest version')
+    .action(async () => {
+      await updateCommand();
+    });
+}
 
 export async function updateCommand(): Promise<void> {
   try {
-    console.log(colors.blue('Checking for updates...'));
+    console.log(colors.blue('Updating installed rules...'));
     
-    // Check latest version of @necolo/cursor-rules-data
-    const currentVersion = await getCurrentVersion('@necolo/cursor-rules-data');
-    const latestVersion = await getLatestVersion('@necolo/cursor-rules-data');
+    // Find target project
+    const projectRoot = await findProjectRoot(process.cwd());
     
-    if (currentVersion === latestVersion) {
-      console.log(colors.green('Rules are already up to date.'));
+    if (!projectRoot) {
+      console.error(colors.red('Error: Could not find project root.'));
+      process.exit(1);
+    }
+    
+    const rulesPath = join(projectRoot, '.cursor', 'rules');
+    
+    // Check if rules directory exists
+    try {
+      await fs.access(rulesPath);
+    } catch {
+      console.log(colors.yellow('No rules directory found. Nothing to update.'));
       return;
     }
     
-    console.log(colors.yellow(`Updating from ${currentVersion} to ${latestVersion}`));
+    // Get list of currently installed rules
+    const installedFiles = await fs.readdir(rulesPath);
+    const installedRules = installedFiles
+      .filter(file => file.endsWith('.mdc'))
+      .map(file => file); // Keep the .mdc extension for reinstallation
     
-    // Get all available rule categories
-    const availableRules = await listAvailableRules();
-    const categories = [...new Set(availableRules.map(rule => rule.category))];
+    if (installedRules.length === 0) {
+      console.log(colors.yellow('No rules installed. Nothing to update.'));
+      return;
+    }
     
-    // Reinstall all rules from current project
-    await installCommand(categories);
+    console.log(colors.blue(`Found ${installedRules.length} installed rule(s). Reinstalling...`));
+    
+    // Reinstall all current rules to get latest versions
+    await installCommand(installedRules);
     
     console.log(colors.green('Rules updated successfully.'));
     

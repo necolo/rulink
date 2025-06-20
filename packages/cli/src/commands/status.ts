@@ -1,8 +1,17 @@
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import colors from 'picocolors';
+import type { CAC } from 'cac';
 import { findProjectRoot } from '../utils/project-detector.js';
-import { listAvailableRules } from '../utils/rules-manager.js';
+import { sourceManager } from '../sources/source-manager.js';
+
+export function registerStatusCommand(cli: CAC) {
+  cli
+    .command('status', 'Show status of installed rules in current project')
+    .action(async () => {
+      await statusCommand();
+    });
+}
 
 export async function statusCommand(): Promise<void> {
   try {
@@ -41,10 +50,15 @@ export async function statusCommand(): Promise<void> {
     }
     console.log();
     
-    // Compare with available rules
-    const availableRules = await listAvailableRules();
-    const availableRuleNames = availableRules.map(rule => rule.name);
-    const notInstalled = availableRuleNames.filter(rule => !installedRules.includes(rule));
+    // Compare with available rules from active source
+    let availableRules: string[] = [];
+    try {
+      const rules = await sourceManager.listRules();
+      availableRules = rules.map(rule => rule.name);
+    } catch {
+      // If no active source, just show installed rules
+    }
+    const notInstalled = availableRules.filter(rule => !installedRules.includes(rule));
     
     if (notInstalled.length > 0) {
       console.log(colors.dim('Available but not installed:'));
