@@ -1,5 +1,11 @@
 # @necolo/cursor-rules
 
+## 0.3.0
+
+### Minor Changes
+
+- [`3a4898c`](https://github.com/necolo/cursor-rules/commit/3a4898c0734dca68d6867f7c78550d1bddc3a945) Thanks [@necolo](https://github.com/necolo)! - renamed package name
+
 ## 0.2.2
 
 ### Patch Changes
