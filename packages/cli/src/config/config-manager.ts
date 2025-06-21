@@ -116,4 +116,39 @@ export class ConfigManager {
     
     return name;
   }
+
+  async renameSource(oldName: string, newName: string): Promise<void> {
+    const config = await this.loadConfig();
+    
+    // Validate oldName exists
+    if (!config.sources[oldName]) {
+      throw new Error(`Source '${oldName}' not found`);
+    }
+    
+    // Validate newName doesn't already exist
+    if (config.sources[newName]) {
+      throw new Error(`Source '${newName}' already exists`);
+    }
+    
+    // Validate newName is valid format
+    if (!newName.trim()) {
+      throw new Error('New source name cannot be empty');
+    }
+    
+    // Create new source entry with same configuration but new name
+    const sourceConfig = { ...config.sources[oldName] };
+    sourceConfig.name = newName;
+    config.sources[newName] = sourceConfig;
+    
+    // Update activeSource if it matches oldName
+    if (config.activeSource === oldName) {
+      config.activeSource = newName;
+    }
+    
+    // Remove old source entry
+    delete config.sources[oldName];
+    
+    // Save updated configuration
+    await this.saveConfig(config);
+  }
 } 

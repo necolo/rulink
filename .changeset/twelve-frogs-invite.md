@@ -1,0 +1,5 @@
+---
+"rulink": minor
+---
+
+better prompts

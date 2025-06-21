@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { sourceAddCommand, sourceListCommand, sourceUseCommand, sourceRemoveCommand } from '../source';
+import { sourceAddCommand, sourceListCommand, sourceUseCommand, sourceRemoveCommand, sourceRenameCommand } from '../source';
 import { AnySourceConfig as SourceConfig } from '../../config/types';
 
 vi.mock('../../sources/source-manager.js', () => ({
@@ -9,6 +9,7 @@ vi.mock('../../sources/source-manager.js', () => ({
         getActiveSource: vi.fn(),
         setActiveSource: vi.fn(),
         removeSource: vi.fn(),
+        renameSource: vi.fn(),
     }
 }));
 
@@ -94,6 +95,25 @@ describe('source commands', () => {
 
             expect(mockSourceManager.removeSource).toHaveBeenCalledWith('source-to-remove');
             expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('✓ Removed source: source-to-remove'));
+        });
+    });
+
+    describe('sourceRenameCommand', () => {
+        it('should rename a source', async () => {
+            mockSourceManager.renameSource.mockResolvedValue(undefined);
+
+            await sourceRenameCommand('old-name', 'new-name');
+
+            expect(mockSourceManager.renameSource).toHaveBeenCalledWith('old-name', 'new-name');
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('✓ Renamed source: old-name to new-name'));
+        });
+
+        it('should handle missing parameters', async () => {
+            await expect(sourceRenameCommand('', 'new-name')).rejects.toThrow('process.exit called with 1');
+        });
+
+        it('should handle undefined new name', async () => {
+            await expect(sourceRenameCommand('old-name', undefined)).rejects.toThrow('process.exit called with 1');
         });
     });
 }); 

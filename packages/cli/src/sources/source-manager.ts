@@ -1,7 +1,7 @@
 import { basename, resolve } from 'path';
 import type { SourceProvider } from './types';
 import type { RuleMetadata } from '../types';
-import type { AnySourceConfig } from '../config/types';
+import type { AnySourceConfig, SourceType } from '../config/types';
 import { ConfigManager } from '../config/config-manager';
 import { LocalSourceProvider } from './providers/local-provider';
 import { GitHubSourceProvider } from './providers/github-provider';
@@ -27,11 +27,11 @@ export class SourceManager {
     }
   }
 
-  private _createSourceConfig(input: string, options: { github?: boolean; npm?: boolean }, existingSources: Record<string, AnySourceConfig>): AnySourceConfig {
+  private _createSourceConfig(input: string, type: SourceType, existingSources: Record<string, AnySourceConfig>): AnySourceConfig {
     let config: AnySourceConfig;
     let suggestedName: string;
 
-    if (options.npm) {
+    if (type === 'npm') {
       // NPM package
       suggestedName = input.split('/').pop() || input;
       config = {
@@ -39,7 +39,7 @@ export class SourceManager {
         package: input,
         name: this.configManager.generateUniqueName(suggestedName, existingSources)
       };
-    } else if (options.github || input.startsWith('https://') || input.includes('github.com')) {
+    } else if (type === 'github' || input.startsWith('https://') || input.includes('github.com')) {
       // GitHub repository
       const cleanUrl = input.replace(/^https?:\/\//, '').replace(/^github\.com\//, '');
       const parts = cleanUrl.split('/');
@@ -63,9 +63,9 @@ export class SourceManager {
     return config;
   }
 
-  async addSource(input: string, options: { github?: boolean; npm?: boolean }): Promise<{ name: string; config: AnySourceConfig }> {
+  async addSource(input: string, type: SourceType): Promise<{ name: string; config: AnySourceConfig }> {
     const existingSources = await this.configManager.listSources();
-    const config = this._createSourceConfig(input, options, existingSources);
+    const config = this._createSourceConfig(input, type, existingSources);
 
     // Validate the source
     const provider = this.createProvider(config);
@@ -110,6 +110,10 @@ export class SourceManager {
       }
     }
     return sourceConfig;
+  }
+
+  isNetworkSource(sourceConfig: AnySourceConfig): boolean {
+    return sourceConfig.type === 'github' || sourceConfig.type === 'npm';
   }
 
   async listRules(sourceName?: string): Promise<RuleMetadata[]> {
@@ -196,6 +200,10 @@ export class SourceManager {
       }
       return folderRules;
     }
+  }
+
+  async renameSource(oldName: string, newName: string): Promise<void> {
+    await this.configManager.renameSource(oldName, newName);
   }
 }
 

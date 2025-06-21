@@ -10,12 +10,6 @@ function isLocalPath(input: string): boolean {
   // Check for Windows-style paths (starting with drive letter)
   if (/^[a-zA-Z]:[\\\/]/.test(input)) return true;
   
-  // Check if it looks like a simple filename or directory (no protocol, no domain)
-  // Exclude things that look like URLs or npm packages
-  if (!input.includes('://') && !input.includes('github.com') && !input.includes('.com') && !input.includes('@')) {
-    return true;
-  }
-  
   return false;
 }
 

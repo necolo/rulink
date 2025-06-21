@@ -5,6 +5,8 @@ import type { CAC } from 'cac';
 import { getProjectRoot } from '../utils/project-detector';
 import { ensureRulesDirectory } from '../utils/rules-utils';
 import { sourceManager } from '../sources/source-manager';
+import { createSpinner, isNetworkSource } from '../utils/loading';
+import { getSourceDisplayInfo, formatSourceDestination } from '../utils/source-display';
 
 import type { InstallOptions } from '../types';
 
@@ -21,6 +23,17 @@ export function registerInstallCommand(cli: CAC) {
 }
 
 export async function installCommand(rulePaths: string[], options: InstallOptions & { source?: string; to?: string } = {}): Promise<void> {
+  // Add spinner cleanup on process exit
+  const cleanup = () => {
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+    process.removeAllListeners('exit');
+  };
+
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+  process.on('exit', cleanup);
+
   try {
     // Find project root or use --to option
     let projectRoot: string;
@@ -32,6 +45,25 @@ export async function installCommand(rulePaths: string[], options: InstallOption
       // Try to find git root, fallback to current directory
       projectRoot = await getProjectRoot();
     }
+
+    // Get source configuration for display
+    const sourceConfig = options.source 
+      ? (await sourceManager.listSources())[options.source]
+      : await sourceManager.getActiveSource();
+
+    if (!sourceConfig) {
+      if (options.source) {
+        console.error(colors.red(`Source '${options.source}' not found`));
+        process.exit(1);
+      } else {
+        console.error(colors.red('No active source configured. Use "cursor-rules source add" to add a source.'));
+        process.exit(1);
+      }
+    }
+
+    // Display friendly source/destination logging
+    const sourceDisplayInfo = getSourceDisplayInfo(sourceConfig);
+    console.log(colors.cyan(formatSourceDestination(sourceDisplayInfo, sourceConfig.name, projectRoot)));
     
     if (options.verbose) {
       console.log(colors.blue(`Installing rules to: ${projectRoot}`));
@@ -39,8 +71,23 @@ export async function installCommand(rulePaths: string[], options: InstallOption
     
     // If no rule paths provided, install all available rules
     if (rulePaths.length === 0) {
+      let listSpinner;
       try {
+        if (isNetworkSource(sourceConfig) && !options.dryRun) {
+          listSpinner = createSpinner({
+            text: `Fetching available rules from ${sourceDisplayInfo.description}...`,
+            successText: `Found rules from ${sourceConfig.name}`,
+            failText: `Failed to fetch rules from ${sourceConfig.name}`
+          });
+          listSpinner.start();
+        }
+
         const availableRules = await sourceManager.listRules(options.source);
+        
+        if (listSpinner) {
+          listSpinner.succeed(`Found ${availableRules.length} rules from ${sourceConfig.name}`);
+        }
+
         rulePaths = availableRules.map(rule => {
           // Construct rule path from category and name
           if (rule.category === 'default') {
@@ -59,6 +106,9 @@ export async function installCommand(rulePaths: string[], options: InstallOption
           console.log(colors.blue(`No specific rules provided. Installing all ${rulePaths.length} available rules.`));
         }
       } catch (error) {
+        if (listSpinner) {
+          listSpinner.fail();
+        }
         console.error(colors.red(`Error listing available rules: ${error}`));
         process.exit(1);
       }
@@ -92,10 +142,28 @@ export async function installCommand(rulePaths: string[], options: InstallOption
           continue;
         }
         
+                let contentSpinner;
         try {
+          if (isNetworkSource(sourceConfig)) {
+            contentSpinner = createSpinner({
+              text: `Fetching rule: ${rulePath}...`,
+              successText: `Fetched ${rulePath}`,
+              failText: `Failed to fetch ${rulePath}`
+            });
+            contentSpinner.start();
+          }
+
           const content = await sourceManager.getRuleContent(rulePath, options.source);
+          
+          if (contentSpinner) {
+            contentSpinner.succeed();
+          }
+          
           console.log(colors.green(`Would install: ${rulePath} (${content.length} bytes)`));
         } catch (error) {
+          if (contentSpinner) {
+            contentSpinner.fail();
+          }
           console.error(colors.red(`Error accessing rule ${rulePath}: ${error}`));
         }
       }
@@ -112,7 +180,17 @@ export async function installCommand(rulePaths: string[], options: InstallOption
         continue;
       }
       
+      let installSpinner;
       try {
+        if (isNetworkSource(sourceConfig)) {
+          installSpinner = createSpinner({
+            text: `Installing rule: ${rulePath}...`,
+            successText: `Installed ${rulePath}`,
+            failText: `Failed to install ${rulePath}`
+          });
+          installSpinner.start();
+        }
+
         const content = await sourceManager.getRuleContent(rulePath, options.source);
         
         // Extract filename for writing
@@ -122,17 +200,24 @@ export async function installCommand(rulePaths: string[], options: InstallOption
         await fs.writeFile(targetPath, content, 'utf8');
         installedRules.push(rulePath);
         
+        if (installSpinner) {
+          installSpinner.succeed();
+        }
+        
         if (options.verbose) {
           console.log(colors.dim(`Installed: ${rulePath} → ${filename}`));
         }
       } catch (error) {
+        if (installSpinner) {
+          installSpinner.fail();
+        }
         console.error(colors.red(`Failed to install rule ${rulePath}: ${error}`));
       }
     }
     
-    // Display success message
+    // Display success message with source context
     if (installedRules.length > 0) {
-      console.log(colors.green(`Successfully installed ${installedRules.length} rule(s):`));
+      console.log(colors.green(`Successfully installed ${installedRules.length} rule(s) from ${sourceConfig.name} (${sourceDisplayInfo.description}):`));
       for (const rule of installedRules) {
         console.log(`  - ${rule}`);
       }
