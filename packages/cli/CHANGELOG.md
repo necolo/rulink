@@ -1,5 +1,11 @@
 # rulink
 
+## 0.6.0
+
+### Minor Changes
+
+- b6dd1e0: better prompts
+
 ## 0.5.0
 
 ### Minor Changes
