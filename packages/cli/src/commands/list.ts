@@ -1,6 +1,6 @@
 import colors from 'picocolors';
-import { sourceManager } from '../sources/source-manager.js';
-import { NAME } from '../variables.js';
+import { sourceManager } from '../sources/source-manager';
+import { NAME } from '../variables';
 
 import type { CAC } from 'cac';
 export function registerListCommand(cli: CAC) {

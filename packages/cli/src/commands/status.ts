@@ -1,9 +1,8 @@
-import { join } from 'path';
 import { promises as fs } from 'fs';
 import colors from 'picocolors';
 import type { CAC } from 'cac';
-import { findProjectRoot } from '../utils/project-detector.js';
-import { sourceManager } from '../sources/source-manager.js';
+import { findActiveRulesDirectory } from '../utils/rules-utils';
+import { sourceManager } from '../sources/source-manager';
 
 export function registerStatusCommand(cli: CAC) {
   cli
@@ -15,15 +14,10 @@ export function registerStatusCommand(cli: CAC) {
 
 export async function statusCommand(): Promise<void> {
   try {
-    // Find project root
-    const projectRoot = await findProjectRoot(process.cwd());
+    // Find active rules directory (current dir first, then project root)
+    const rulesInfo = await findActiveRulesDirectory();
     
-    if (!projectRoot) {
-      console.error(colors.red('Error: Could not find project root.'));
-      process.exit(1);
-    }
-    
-    const rulesPath = join(projectRoot, '.cursor', 'rules');
+    const rulesPath = rulesInfo.path;
     
     // Check if rules directory exists
     let installedRules: string[] = [];
@@ -36,7 +30,7 @@ export async function statusCommand(): Promise<void> {
     }
     
     // Show which rules are installed in current project
-    console.log(colors.blue(`Cursor Rules Status for: ${projectRoot}`));
+    console.log(colors.blue(`Cursor Rules Status for: ${rulesInfo.projectRoot} (${rulesInfo.source === 'local' ? 'local rules' : 'project rules'})`));
     console.log();
     
     if (installedRules.length === 0) {

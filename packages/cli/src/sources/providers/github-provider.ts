@@ -1,10 +1,10 @@
 import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import type { SourceProvider } from '../types.js';
-import type { RuleMetadata } from '../../types.js';
-import type { ValidationResult, GitHubSourceConfig } from '../../config/types.js';
-import { getGitCredentials, createAuthHeaders } from '../../utils/auth.js';
+import type { SourceProvider } from '../types';
+import type { RuleMetadata } from '../../types';
+import type { ValidationResult, GitHubSourceConfig } from '../../config/types';
+import { getGitCredentials, createAuthHeaders } from '../../utils/auth';
 
 const execAsync = promisify(exec);
 

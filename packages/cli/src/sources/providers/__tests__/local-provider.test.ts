@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { promises as fs } from 'fs';
-import { LocalSourceProvider } from '../local-provider.js';
-import type { LocalSourceConfig } from '../../../config/types.js';
+import { LocalSourceProvider } from '../local-provider';
+import type { LocalSourceConfig } from '../../../config/types';
 
 // Mock fs module
 vi.mock('fs', () => ({

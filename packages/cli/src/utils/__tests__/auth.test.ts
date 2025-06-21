@@ -10,7 +10,7 @@ vi.mock('util', () => ({
   promisify: vi.fn((fn) => fn)
 }));
 
-import { getGitCredentials, createAuthHeaders } from '../auth.js';
+import { getGitCredentials, createAuthHeaders } from '../auth';
 
 describe('Auth utilities', () => {
   describe('getGitCredentials', () => {

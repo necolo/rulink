@@ -12,7 +12,7 @@ vi.mock('../../sources/source-manager.js', () => ({
     }
 }));
 
-import { sourceManager } from '../../sources/source-manager.js';
+import { sourceManager } from '../../sources/source-manager';
 
 const mockSourceManager = vi.mocked(sourceManager);
 

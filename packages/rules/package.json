@@ -1,5 +1,5 @@
 {
-  "name": "@necolo/cursor-rules-data",
+  "name": "@necolo/cursor-rules",
   "version": "0.2.0",
   "description": "Cursor AI rules data package",
   "main": "./package.json",

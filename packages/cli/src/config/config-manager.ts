@@ -1,9 +1,9 @@
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { NAME } from '../variables.js';
+import { NAME } from '../variables';
 
-import type { GlobalConfig, AnySourceConfig } from './types.js';
+import type { GlobalConfig, AnySourceConfig } from './types';
 export class ConfigManager {
   private configDir: string;
   private configPath: string;

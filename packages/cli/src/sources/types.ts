@@ -1,5 +1,5 @@
-import type { RuleMetadata } from '../types.js';
-import type { ValidationResult } from '../config/types.js';
+import type { RuleMetadata } from '../types';
+import type { ValidationResult } from '../config/types';
 
 export interface SourceProvider {
   validateSource(): Promise<ValidationResult>;

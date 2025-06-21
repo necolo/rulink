@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs';
 import { join, basename, dirname } from 'path';
-import type { SourceProvider } from '../types.js';
-import type { RuleMetadata } from '../../types.js';
-import type { ValidationResult, LocalSourceConfig } from '../../config/types.js';
+import type { SourceProvider } from '../types';
+import type { RuleMetadata } from '../../types';
+import type { ValidationResult, LocalSourceConfig } from '../../config/types';
 
 export class LocalSourceProvider implements SourceProvider {
   constructor(private config: LocalSourceConfig) {}

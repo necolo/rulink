@@ -2,7 +2,7 @@ import { join } from 'path';
 import { promises as fs } from 'fs';
 import colors from 'picocolors';
 import type { CAC } from 'cac';
-import { findProjectRoot } from '../utils/project-detector.js';
+import { findActiveRulesDirectory, validateRulesDirectoryPath } from '../utils/rules-utils';
 
 export function registerRemoveCommand(cli: CAC) {
   cli
@@ -14,20 +14,14 @@ export function registerRemoveCommand(cli: CAC) {
 
 export async function removeCommand(ruleFiles: string[]): Promise<void> {
   try {
-    // Find target project
-    const projectRoot = await findProjectRoot(process.cwd());
+    // Find active rules directory (current dir first, then project root)
+    const rulesInfo = await findActiveRulesDirectory();
     
-    if (!projectRoot) {
-      console.error(colors.red('Error: Could not find project root.'));
-      process.exit(1);
-    }
-    
-    const rulesPath = join(projectRoot, '.cursor', 'rules');
+    const rulesPath = rulesInfo.path;
     
     // Check if rules directory exists
-    try {
-      await fs.access(rulesPath);
-    } catch {
+    const rulesDirectoryExists = await validateRulesDirectoryPath(rulesInfo.path);
+    if (!rulesDirectoryExists) {
       console.error(colors.red('Error: No rules directory found in this project.'));
       process.exit(1);
     }

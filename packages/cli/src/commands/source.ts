@@ -1,8 +1,8 @@
 import colors from 'picocolors';
 import type { CAC } from 'cac';
-import { sourceManager } from '../sources/source-manager.js';
-import { getProvider } from '../sources/provider-detect.js';
-import { NAME } from '../variables.js';
+import { sourceManager } from '../sources/source-manager';
+import { getProvider } from '../sources/provider-detect';
+import { NAME } from '../variables';
 
 export function registerSourceCommands(cli: CAC) {
   cli

@@ -1,13 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { statusCommand } from '../status';
-import { promises as fs } from 'fs';
-import { findProjectRoot } from '../../utils/project-detector';
 import { SourceManager } from '../../sources/source-manager';
 import { RuleMetadata } from '../../types';
 
 // Mock modules
-vi.mock('fs');
-vi.mock('../../utils/project-detector');
+vi.mock('fs', () => ({
+  promises: {
+    readdir: vi.fn(),
+  },
+  readFileSync: vi.fn(() => '{"version": "0.2.2"}')
+}));
+
+vi.mock('../../utils/rules-utils.js', () => ({
+  findActiveRulesDirectory: vi.fn(),
+}));
+
 vi.mock('../../sources/source-manager');
 
 vi.mock('picocolors', () => ({
@@ -20,13 +27,16 @@ vi.mock('picocolors', () => ({
     },
 }));
 
+import { promises as fs } from 'fs';
+import { findActiveRulesDirectory } from '../../utils/rules-utils';
+
 describe('status command', () => {
     let mockExit: any;
     let mockConsoleLog: any;
     let mockConsoleError: any;
 
     const mockReaddir = vi.mocked(fs.readdir);
-    const mockFindProjectRoot = vi.mocked(findProjectRoot);
+    const mockFindActiveRulesDirectory = vi.mocked(findActiveRulesDirectory);
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -39,8 +49,9 @@ describe('status command', () => {
         vi.resetAllMocks();
     });
 
-    it('should show status of installed rules', async () => {
-        const projectRoot = '/home/user/project';
+    it('should show status of installed rules with local rules', async () => {
+        const projectRoot = '/test/project';
+        const rulesPath = '/test/current/.cursor/rules';
         const installedFiles = ['strict-types.mdc', 'component-standards.mdc', 'other-file.txt'];
         const availableRules: RuleMetadata[] = [
             { name: 'strict-types', description: 'Enforces strict TypeScript settings', category: 'typescript' },
@@ -48,13 +59,17 @@ describe('status command', () => {
             { name: 'code-style', description: 'General code style rules', category: 'general' },
         ];
 
-        mockFindProjectRoot.mockResolvedValue(projectRoot);
+        mockFindActiveRulesDirectory.mockResolvedValue({
+            path: rulesPath,
+            source: 'local',
+            projectRoot
+        });
         mockReaddir.mockResolvedValue(installedFiles as any);
         vi.mocked(SourceManager.prototype.listRules).mockResolvedValue(availableRules);
 
         await statusCommand();
 
-        expect(mockConsoleLog).toHaveBeenCalledWith(`Cursor Rules Status for: ${projectRoot}`);
+        expect(mockConsoleLog).toHaveBeenCalledWith(`Cursor Rules Status for: ${projectRoot} (local rules)`);
         expect(mockConsoleLog).toHaveBeenCalledWith('Installed rules:');
         expect(mockConsoleLog).toHaveBeenCalledWith('  ✓ strict-types');
         expect(mockConsoleLog).toHaveBeenCalledWith('  ✓ component-standards');
@@ -62,38 +77,70 @@ describe('status command', () => {
         expect(mockConsoleLog).toHaveBeenCalledWith('  - code-style');
     });
 
-    it('should handle no project root found', async () => {
-        mockFindProjectRoot.mockResolvedValue(null);
+    it('should show status of installed rules with project rules', async () => {
+        const projectRoot = '/test/project';
+        const rulesPath = '/test/project/.cursor/rules';
+        const installedFiles = ['strict-types.mdc'];
+        
+        mockFindActiveRulesDirectory.mockResolvedValue({
+            path: rulesPath,
+            source: 'project',
+            projectRoot
+        });
+        mockReaddir.mockResolvedValue(installedFiles as any);
+        vi.mocked(SourceManager.prototype.listRules).mockResolvedValue([]);
+
         await statusCommand();
-        expect(mockConsoleError).toHaveBeenCalledWith('Error: Could not find project root.');
-        expect(mockExit).toHaveBeenCalledWith(1);
+
+        expect(mockConsoleLog).toHaveBeenCalledWith(`Cursor Rules Status for: ${projectRoot} (project rules)`);
+        expect(mockConsoleLog).toHaveBeenCalledWith('Installed rules:');
+        expect(mockConsoleLog).toHaveBeenCalledWith('  ✓ strict-types');
     });
 
     it('should handle no rules directory', async () => {
-        const projectRoot = '/home/user/project';
-        mockFindProjectRoot.mockResolvedValue(projectRoot);
+        const projectRoot = '/test/project';
+        const rulesPath = '/test/project/.cursor/rules';
+        
+        mockFindActiveRulesDirectory.mockResolvedValue({
+            path: rulesPath,
+            source: 'project',
+            projectRoot
+        });
         mockReaddir.mockRejectedValue(new Error('ENOENT'));
+        
         await statusCommand();
         expect(mockConsoleLog).toHaveBeenCalledWith('No rules directory found in this project.');
     });
 
     it('should handle no installed rules', async () => {
-        const projectRoot = '/home/user/project';
-        mockFindProjectRoot.mockResolvedValue(projectRoot);
+        const projectRoot = '/test/project';
+        const rulesPath = '/test/project/.cursor/rules';
+        
+        mockFindActiveRulesDirectory.mockResolvedValue({
+            path: rulesPath,
+            source: 'project',
+            projectRoot
+        });
         mockReaddir.mockResolvedValue([]);
+        
         await statusCommand();
         expect(mockConsoleLog).toHaveBeenCalledWith('No rules installed.');
     });
 
     it('should handle all rules installed', async () => {
-        const projectRoot = '/home/user/project';
+        const projectRoot = '/test/project';
+        const rulesPath = '/test/project/.cursor/rules';
         const installedFiles = ['strict-types.mdc', 'code-style.mdc'];
         const availableRules: RuleMetadata[] = [
             { name: 'strict-types', description: 'Enforces strict TypeScript settings', category: 'typescript' },
             { name: 'code-style', description: 'General code style rules', category: 'general' },
         ];
 
-        mockFindProjectRoot.mockResolvedValue(projectRoot);
+        mockFindActiveRulesDirectory.mockResolvedValue({
+            path: rulesPath,
+            source: 'project',
+            projectRoot
+        });
         mockReaddir.mockResolvedValue(installedFiles as any);
         vi.mocked(SourceManager.prototype.listRules).mockResolvedValue(availableRules);
 
@@ -107,9 +154,12 @@ describe('status command', () => {
 
     it('should handle errors gracefully', async () => {
         const error = new Error('Permission denied');
-        mockFindProjectRoot.mockRejectedValue(error);
+        
+        mockFindActiveRulesDirectory.mockRejectedValue(error);
+        
         await statusCommand();
-        expect(mockConsoleError).toHaveBeenCalledWith(`Error: ${error}`);
+        
+        expect(mockConsoleError).toHaveBeenCalledWith('Error: Error: Permission denied');
         expect(mockExit).toHaveBeenCalledWith(1);
     });
 }); 

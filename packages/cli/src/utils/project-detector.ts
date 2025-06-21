@@ -1,21 +1,15 @@
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
+import { homedir } from 'os';
 
-export async function findProjectRoot(startPath: string): Promise<string | null> {
+export async function findGitRoot(startPath: string): Promise<string | null> {
   let currentPath = startPath;
+  const homeDir = homedir();
   
-  while (currentPath !== dirname(currentPath)) {
+  while (currentPath !== dirname(currentPath) && currentPath !== homeDir) {
     try {
       const gitPath = join(currentPath, '.git');
       await fs.access(gitPath);
-      return currentPath;
-    } catch {
-      // Continue searching
-    }
-    
-    try {
-      const packageJsonPath = join(currentPath, 'package.json');
-      await fs.access(packageJsonPath);
       return currentPath;
     } catch {
       // Continue searching
@@ -27,14 +21,9 @@ export async function findProjectRoot(startPath: string): Promise<string | null>
   return null;
 }
 
-export async function ensureRulesDirectory(projectPath: string): Promise<string> {
-  const rulesPath = join(projectPath, '.cursor', 'rules');
-  
-  try {
-    await fs.mkdir(rulesPath, { recursive: true });
-  } catch (error) {
-    throw new Error(`Failed to create rules directory: ${error}`);
-  }
-  
-  return rulesPath;
-} 
+export async function getProjectRoot(startPath?: string): Promise<string> {
+  const gitRoot = await findGitRoot(startPath || process.cwd());
+  return gitRoot || startPath || process.cwd();
+}
+
+ 

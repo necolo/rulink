@@ -1,11 +1,11 @@
 import { basename, resolve } from 'path';
-import type { SourceProvider } from './types.js';
-import type { RuleMetadata } from '../types.js';
-import type { AnySourceConfig } from '../config/types.js';
-import { ConfigManager } from '../config/config-manager.js';
-import { LocalSourceProvider } from './providers/local-provider.js';
-import { GitHubSourceProvider } from './providers/github-provider.js';
-import { NpmSourceProvider } from './providers/npm-provider.js';
+import type { SourceProvider } from './types';
+import type { RuleMetadata } from '../types';
+import type { AnySourceConfig } from '../config/types';
+import { ConfigManager } from '../config/config-manager';
+import { LocalSourceProvider } from './providers/local-provider';
+import { GitHubSourceProvider } from './providers/github-provider';
+import { NpmSourceProvider } from './providers/npm-provider';
 
 export class SourceManager {
   private configManager: ConfigManager;
@@ -140,32 +140,62 @@ export class SourceManager {
   }
 
   async validateRulePath(rulePath: string): Promise<{ valid: boolean; error?: string }> {
-    // Rule must end with .mdc
-    if (!rulePath.endsWith('.mdc')) {
-      return {
-        valid: false,
-        error: `Rule path must end with .mdc: ${rulePath}`
-      };
-    }
+    // If ends with .mdc, use existing validation logic
+    if (rulePath.endsWith('.mdc')) {
+      // Cannot be just a category name
+      const pathParts = rulePath.split('/');
+      if (pathParts.length > 2) {
+        return {
+          valid: false,
+          error: `Rule path cannot be more than 2 levels deep: ${rulePath}`
+        };
+      }
 
-    // Cannot be just a category name
-    const pathParts = rulePath.split('/');
-    if (pathParts.length > 2) {
-      return {
-        valid: false,
-        error: `Rule path cannot be more than 2 levels deep: ${rulePath}`
-      };
-    }
+      // If it's a category/file.mdc format, category cannot be empty
+      if (pathParts.length === 2 && !pathParts[0]) {
+        return {
+          valid: false,
+          error: `Category name cannot be empty: ${rulePath}`
+        };
+      }
 
-    // If it's a category/file.mdc format, category cannot be empty
-    if (pathParts.length === 2 && !pathParts[0]) {
-      return {
-        valid: false,
-        error: `Category name cannot be empty: ${rulePath}`
-      };
+      return { valid: true };
+    } else {
+      // Folder name validation
+      if (rulePath.includes('/')) {
+        return { valid: false, error: `Folder name cannot contain slashes: ${rulePath}` };
+      }
+      if (!rulePath.trim()) {
+        return { valid: false, error: 'Folder name cannot be empty' };
+      }
+      return { valid: true };
     }
+  }
 
-    return { valid: true };
+  async getRulesByCategory(categoryName: string, sourceName?: string): Promise<string[]> {
+    const allRules = await this.listRules(sourceName);
+    const categoryRules = allRules.filter(rule => rule.category === categoryName);
+    return categoryRules.map(rule => 
+      rule.category === 'default' ? `${rule.name}.mdc` : `${rule.category}/${rule.name}.mdc`
+    );
+  }
+
+  async expandRulePath(rulePath: string, sourceName?: string): Promise<string[]> {
+    if (rulePath.endsWith('.mdc')) {
+      // Specific file path - validate and return as-is
+      const validation = await this.validateRulePath(rulePath);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+      return [rulePath];
+    } else {
+      // Folder name - expand to all files in folder
+      const folderRules = await this.getRulesByCategory(rulePath, sourceName);
+      if (folderRules.length === 0) {
+        throw new Error(`No rules found in category '${rulePath}'`);
+      }
+      return folderRules;
+    }
   }
 }
 

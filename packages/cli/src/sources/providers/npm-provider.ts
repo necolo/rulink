@@ -2,9 +2,9 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { promises as fs } from 'fs';
-import type { SourceProvider } from '../types.js';
-import type { RuleMetadata } from '../../types.js';
-import type { ValidationResult, NpmSourceConfig } from '../../config/types.js';
+import type { SourceProvider } from '../types';
+import type { RuleMetadata } from '../../types';
+import type { ValidationResult, NpmSourceConfig } from '../../config/types';
 
 const execAsync = promisify(exec);
 

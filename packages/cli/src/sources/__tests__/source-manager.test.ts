@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SourceManager } from '../source-manager.js';
-import { ConfigManager } from '../../config/config-manager.js';
-import { LocalSourceProvider } from '../providers/local-provider.js';
-import { GitHubSourceProvider } from '../providers/github-provider.js';
-import { NpmSourceProvider } from '../providers/npm-provider.js';
-import type { GlobalConfig, AnySourceConfig } from '../../config/types.js';
+import { SourceManager } from '../source-manager';
+import { ConfigManager } from '../../config/config-manager';
+import { LocalSourceProvider } from '../providers/local-provider';
+import { GitHubSourceProvider } from '../providers/github-provider';
+import { NpmSourceProvider } from '../providers/npm-provider';
+import type { GlobalConfig, AnySourceConfig } from '../../config/types';
 
 // Mock the providers
 vi.mock('../providers/local-provider.js');
@@ -228,23 +228,142 @@ describe('SourceManager', () => {
     });
   });
 
-  describe('validateRulePath', () => {
-    it('should validate correct rule paths', async () => {
-      const result1 = await sourceManager.validateRulePath('style.mdc');
-      expect(result1.valid).toBe(true);
+  describe('getRulesByCategory', () => {
+    it('should return rules for specified category', async () => {
+      const mockSource = {
+        type: 'local',
+        name: 'local-rules',
+        path: '/path/to/rules'
+      };
+      
+      const mockRules = [
+        { category: 'typescript', name: 'style' },
+        { category: 'typescript', name: 'types' },
+        { category: 'general', name: 'basic' }
+      ];
 
-      const result2 = await sourceManager.validateRulePath('typescript/style.mdc');
-      expect(result2.valid).toBe(true);
+      const mockProviderInstance = {
+        listRules: vi.fn().mockResolvedValue(mockRules)
+      };
+
+      configManagerInstance.getActiveSource.mockResolvedValue(mockSource);
+      mockLocalProvider.mockImplementation(() => mockProviderInstance);
+
+      const result = await sourceManager.getRulesByCategory('typescript');
+
+      expect(result).toEqual(['typescript/style.mdc', 'typescript/types.mdc']);
     });
 
-    it('should reject invalid rule paths', async () => {
-      const result1 = await sourceManager.validateRulePath('style');
-      expect(result1.valid).toBe(false);
-      expect(result1.error).toContain('must end with .mdc');
+    it('should return rules for default category', async () => {
+      const mockSource = {
+        type: 'local',
+        name: 'local-rules',
+        path: '/path/to/rules'
+      };
+      
+      const mockRules = [
+        { category: 'default', name: 'basic' },
+        { category: 'typescript', name: 'style' }
+      ];
 
-      const result2 = await sourceManager.validateRulePath('a/b/c.mdc');
-      expect(result2.valid).toBe(false);
-      expect(result2.error).toContain('cannot be more than 2 levels deep');
+      const mockProviderInstance = {
+        listRules: vi.fn().mockResolvedValue(mockRules)
+      };
+
+      configManagerInstance.getActiveSource.mockResolvedValue(mockSource);
+      mockLocalProvider.mockImplementation(() => mockProviderInstance);
+
+      const result = await sourceManager.getRulesByCategory('default');
+
+      expect(result).toEqual(['basic.mdc']);
+    });
+  });
+
+  describe('expandRulePath', () => {
+    it('should return single path for .mdc files', async () => {
+      const result = await sourceManager.expandRulePath('typescript/style.mdc');
+
+      expect(result).toEqual(['typescript/style.mdc']);
+    });
+
+    it('should expand folder names to all files in category', async () => {
+      const mockSource = {
+        type: 'local',
+        name: 'local-rules',
+        path: '/path/to/rules'
+      };
+      
+      const mockRules = [
+        { category: 'typescript', name: 'style' },
+        { category: 'typescript', name: 'types' }
+      ];
+
+      const mockProviderInstance = {
+        listRules: vi.fn().mockResolvedValue(mockRules)
+      };
+
+      configManagerInstance.getActiveSource.mockResolvedValue(mockSource);
+      mockLocalProvider.mockImplementation(() => mockProviderInstance);
+
+      const result = await sourceManager.expandRulePath('typescript');
+
+      expect(result).toEqual(['typescript/style.mdc', 'typescript/types.mdc']);
+    });
+
+    it('should throw error for empty categories', async () => {
+      const mockSource = {
+        type: 'local',
+        name: 'local-rules',
+        path: '/path/to/rules'
+      };
+      
+      const mockRules: any[] = [];
+
+      const mockProviderInstance = {
+        listRules: vi.fn().mockResolvedValue(mockRules)
+      };
+
+      configManagerInstance.getActiveSource.mockResolvedValue(mockSource);
+      mockLocalProvider.mockImplementation(() => mockProviderInstance);
+
+      await expect(sourceManager.expandRulePath('nonexistent')).rejects.toThrow(
+        "No rules found in category 'nonexistent'"
+      );
+    });
+  });
+
+  describe('validateRulePath', () => {
+    it('should validate .mdc file paths', async () => {
+      const result = await sourceManager.validateRulePath('typescript/style.mdc');
+
+      expect(result.valid).toBe(true);
+    });
+
+    it('should validate folder names', async () => {
+      const result = await sourceManager.validateRulePath('typescript');
+
+      expect(result.valid).toBe(true);
+    });
+
+    it('should reject folder names with slashes', async () => {
+      const result = await sourceManager.validateRulePath('typescript/folder');
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Folder name cannot contain slashes: typescript/folder');
+    });
+
+    it('should reject empty folder names', async () => {
+      const result = await sourceManager.validateRulePath('');
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Folder name cannot be empty');
+    });
+
+    it('should reject paths more than 2 levels deep for .mdc files', async () => {
+      const result = await sourceManager.validateRulePath('a/b/c.mdc');
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Rule path cannot be more than 2 levels deep: a/b/c.mdc');
     });
   });
 }); 

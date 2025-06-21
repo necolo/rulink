@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { listCommand } from '../list.js';
+import { listCommand } from '../list';
 
 // Mock modules
 vi.mock('../../sources/source-manager.js', () => ({
@@ -24,7 +24,7 @@ vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 vi.spyOn(console, 'log').mockImplementation(() => {});
 vi.spyOn(console, 'error').mockImplementation(() => {});
 
-import { sourceManager } from '../../sources/source-manager.js';
+import { sourceManager } from '../../sources/source-manager';
 
 const mockExit = vi.mocked(process.exit);
 const mockConsoleLog = vi.mocked(console.log);

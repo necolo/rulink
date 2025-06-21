@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Core Philosophy:
+Follow bottom-up programming mindset, starting from atomic-level functionality and building complex systems through composition. Prioritize testability, reusability, and composability.
+
+# Design Principles
+
+Atomic-First Design
+- Function Design
+   1. Pure Functions first
+   2. Single Responsibility
+   3. Composable: Functions should be easy to compose with clear input/output types
+   4. Testable: Atomic functions must be easily unit testable
+- Component Design (React)
+   1. Atomic Components: Start from the smallest UI atoms
+   2. Props Interface: Clear props interfaces with type safety
+   3. Composition over Inheritance: Build complex components through composition rather than inheritance
+   
+SOLID Design
+S - Single Responsibility Principle
+O - Open-Closed Principle
+L - Liskov Substitution Principle
+I - Interface Segregation Principle
+D - Dependency Inversion Principle
+
+
+KISS (Keep It Simple, Stupid)
+- Encourages to write straightforward, uncomplicated solutions
+- Avoids over-engineering and unnecessary complexity
+- Results in more readable and maintainable code
+
+YAGNI (You Aren't Gonna Need It)
+- Prevents from adding speculative features
+- Focuses on implementing only what's currently needed
+- Reduces code bloat and maintenance overhead

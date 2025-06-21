@@ -1,0 +1,7 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+# Coding Styles
+1. Use Typescript paths instead of relative paths, eg: start from "@/"

@@ -3,4 +3,5 @@ description:
 globs: 
 alwaysApply: true
 ---
-Always check if need to update the README.md.
+Always check if need to update the README.md
+Keep readme.md friendly to read.
