@@ -1,5 +1,11 @@
 # rulink
 
+## 0.6.1
+
+### Patch Changes
+
+- 56a6b80: Test workflow auto-publish fix
+
 ## 0.6.0
 
 ### Minor Changes
