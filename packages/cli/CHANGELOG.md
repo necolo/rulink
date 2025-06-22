@@ -1,5 +1,11 @@
 # rulink
 
+## 0.7.0
+
+### Minor Changes
+
+- bf9d5a0: Add source --remove-all command
+
 ## 0.6.1
 
 ### Patch Changes
