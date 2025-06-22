@@ -1,5 +1,11 @@
 # rulink
 
+## 0.7.1
+
+### Patch Changes
+
+- 69012fd: fix source --remove
+
 ## 0.7.0
 
 ### Minor Changes
