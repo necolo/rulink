@@ -1,6 +1,6 @@
 # rulink
 
-> A flexible CLI tool for managing [Cursor AI](https://cursor.sh/) rules from multiple sources - local folders, GitHub repositories, and NPM packages.
+> Stop manually copying Cursor rules between projects. Automatically install and manage Cursor AI rules from GitHub repos, NPM packages, and local folders.
 
 [![npm version](https://badge.fury.io/js/%40necolo%2Fcursor-rules.svg)](https://badge.fury.io/js/%40necolo%2Fcursor-rules)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,10 +8,14 @@
 ## 🚀 Quick Start
 
 ```bash
-# Add a rule source (local folder, GitHub repo, or NPM package)
-npx rulink source add /path/to/local/rules
-npx rulink source add --github github.com/user/awesome-cursor-rules
-npx rulink source add --npm @company/cursor-rules
+# Add a local rule source
+npx rulink source --add /path/to/local/rules
+
+# Or: add a rule source from github
+npx rulink source --add https://github.com/PatrickJS/awesome-cursorrules/blob/main/rules-new/typescript.mdc
+
+# Or: add ad rule source from npm
+npx rulink source --add @mallardbay/cursor-rules
 
 # List available sources
 npx rulink source list

@@ -11,6 +11,7 @@ export function registerSourceCommands(cli: CAC) {
     .option('-l, --list, --all', 'List all configured sources')
     .option('-A, --add <path|url|package>', 'Add a new rule source, can be a local path, npm package, or github repository')
     .option('--remove <sourceName>', 'Remove a source')
+    .option('--remove-all', 'Remove all sources')
     .option('--use <sourceName>', 'Set active source')
     .option('--rename, -m, -M <newName>', 'Rename a source')
     .option('--verbose', 'Verbose output')
@@ -29,6 +30,8 @@ export function registerSourceCommands(cli: CAC) {
         await sourceRenameCommand(input, options.rename);
       } else if (options.list || options.all) {
         await sourceListCommand();
+      } else if (options.removeAll) {
+        await sourceRemoveAllCommand();
       } else {
         await sourceCommand(input);
       }
