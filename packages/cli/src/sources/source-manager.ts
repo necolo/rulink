@@ -6,6 +6,7 @@ import { ConfigManager } from '../config/config-manager';
 import { LocalSourceProvider } from './providers/local-provider';
 import { GitHubSourceProvider } from './providers/github-provider';
 import { NpmSourceProvider } from './providers/npm-provider';
+import { NAME } from '../variables';
 
 export class SourceManager {
   private configManager: ConfigManager;
@@ -106,7 +107,7 @@ export class SourceManager {
       if (sourceName) {
         throw new Error(`Source '${sourceName}' not found`);
       } else {
-        throw new Error('No active source configured. Use "cursor-rules source add" to add a source.');
+        throw new Error(`No active source configured. Use "${NAME} source --add" to add a source.`);
       }
     }
     return sourceConfig;

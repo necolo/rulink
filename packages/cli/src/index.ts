@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { cac } from 'cac';
+import { registerAddCommand } from './commands/add';
 import { registerInstallCommand } from './commands/install';
 import { registerListCommand } from './commands/list';
 import { registerRemoveCommand } from './commands/remove';
@@ -17,6 +18,7 @@ registerUpdateCommand(cli);
 registerListCommand(cli);
 registerStatusCommand(cli);
 registerSourceCommands(cli);
+registerAddCommand(cli);
 
 cli.help();
 cli.version(VERSION);

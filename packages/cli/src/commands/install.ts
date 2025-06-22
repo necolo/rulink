@@ -1,15 +1,15 @@
-import { join } from 'path';
 import { promises as fs } from 'fs';
+import { join } from 'path';
 import colors from 'picocolors';
-import type { CAC } from 'cac';
-import { getProjectRoot } from '../utils/project-detector';
-import { ensureRulesDirectory } from '../utils/rules-utils';
 import { sourceManager } from '../sources/source-manager';
 import { createSpinner, isNetworkSource } from '../utils/loading';
-import { getSourceDisplayInfo, formatSourceDestination } from '../utils/source-display';
+import { getProjectRoot } from '../utils/project-detector';
+import { ensureRulesDirectory } from '../utils/rules-utils';
+import { formatSourceDestination, getSourceDisplayInfo } from '../utils/source-display';
+import { NAME } from '../variables';
 
+import type { CAC } from 'cac';
 import type { InstallOptions } from '../types';
-
 export function registerInstallCommand(cli: CAC) {
   cli
     .command('install [...rulePaths]', 'Install cursor rules by file path (e.g., style.mdc or typescript/style.mdc), folder name (e.g., typescript), or install all rules if no paths specified')
@@ -56,7 +56,7 @@ export async function installCommand(rulePaths: string[], options: InstallOption
         console.error(colors.red(`Source '${options.source}' not found`));
         process.exit(1);
       } else {
-        console.error(colors.red('No active source configured. Use "cursor-rules source add" to add a source.'));
+        console.error(colors.red(`No active source configured. Use "${NAME} source --add" to add a source.`));
         process.exit(1);
       }
     }

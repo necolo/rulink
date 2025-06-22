@@ -34,7 +34,7 @@ export async function getGitCredentials(): Promise<GitCredentials> {
 
 export function createAuthHeaders(credentials: GitCredentials): Record<string, string> {
   const headers: Record<string, string> = {
-    'User-Agent': 'cursor-rules-cli'
+    'User-Agent': 'rulink'
   };
 
   if (credentials.token) {

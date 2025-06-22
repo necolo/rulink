@@ -24,7 +24,7 @@ describe('Auth utilities', () => {
     it('should create auth headers with token', () => {
       const result = createAuthHeaders({ token: 'test-token' });
       expect(result).toEqual({
-        'User-Agent': 'cursor-rules-cli',
+        'User-Agent': 'rulink',
         'Authorization': 'token test-token'
       });
     });
@@ -32,7 +32,7 @@ describe('Auth utilities', () => {
     it('should return basic headers for no token', () => {
       const result = createAuthHeaders({});
       expect(result).toEqual({
-        'User-Agent': 'cursor-rules-cli'
+        'User-Agent': 'rulink'
       });
     });
   });

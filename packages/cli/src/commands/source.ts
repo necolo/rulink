@@ -1,15 +1,13 @@
 import colors from 'picocolors';
-import type { CAC } from 'cac';
-import { sourceManager } from '../sources/source-manager';
-import { getProvider } from '../sources/provider-detect';
-import { NAME } from '../variables';
 import { AnySourceConfig } from '../config/types';
+import { sourceManager } from '../sources/source-manager';
+import { NAME } from '../variables';
 
+import type { CAC } from 'cac';
 export function registerSourceCommands(cli: CAC) {
   cli
     .command('source [sourceName]', 'Show source details, default is active source')
     .option('-l, --list, --all', 'List all configured sources')
-    .option('-A, --add <path|url|package>', 'Add a new rule source, can be a local path, npm package, or github repository')
     .option('--remove <sourceName>', 'Remove a source')
     .option('--remove-all', 'Remove all sources')
     .option('--use <sourceName>', 'Set active source')
@@ -20,9 +18,7 @@ export function registerSourceCommands(cli: CAC) {
     .example(`${NAME} source -A github:user/repo              Add GitHub package`)
     .example(`${NAME} source --rename old-name new-name       Rename a source`)
     .action(async (input: string, options = {}) => {
-      if (options.add) {
-        await sourceAddCommand(options.add, options);
-      } else if (options.remove) {
+      if (options.remove) {
         await sourceRemoveCommand(options);
       } else if (options.use) {
         await sourceUseCommand(options.use);
@@ -36,48 +32,6 @@ export function registerSourceCommands(cli: CAC) {
         await sourceCommand(input);
       }
     })
-}
-
-export async function sourceAddCommand(
-  input: string, 
-  options: { verbose?: boolean; }
-): Promise<void> {
-  const provider = getProvider(input);
-  try {
-    if (options.verbose) {
-      console.log(colors.blue(`Adding source: ${input}`));
-      if (provider === 'github') console.log(colors.dim('Type: GitHub'));
-      else if (provider === 'npm') console.log(colors.dim('Type: NPM'));
-      else console.log(colors.dim('Type: Local'))
-    }
-
-    const result = await sourceManager.addSource(input, provider);
-    
-    console.log(colors.green(`✓ Successfully added source: ${result.name}`));
-    console.log(colors.dim(`  Type: ${result.config.type}`));
-    
-    switch (result.config.type) {
-      case 'local':
-        console.log(colors.dim(`  Path: ${result.config.path}`));
-        break;
-      case 'github':
-        console.log(colors.dim(`  URL: ${result.config.url}`));
-        break;
-      case 'npm':
-        console.log(colors.dim(`  Package: ${result.config.package}`));
-        break;
-    }
-
-    // Check if this is the first source
-    const sources = await sourceManager.listSources();
-    if (Object.keys(sources).length === 1) {
-      console.log(colors.cyan(`This is now your active source.`));
-    }
-
-  } catch (error) {
-    console.error(colors.red(`Error: ${error}`));
-    process.exit(1);
-  }
 }
 
 export async function sourceListCommand(): Promise<void> {
@@ -96,7 +50,7 @@ export async function sourceListCommand(): Promise<void> {
 
     for (const [name, config] of Object.entries(sources)) {
       const isActive = activeSource?.name === name;
-      logSourceDetail(name, config, isActive);
+      logSourceDetail(config, isActive);
     }
 
   } catch (error) {
@@ -110,8 +64,9 @@ export async function sourceCommand(sourceName: string = ''): Promise<void> {
     const activeSource = await sourceManager.getActiveSource();
     const sources = await sourceManager.listSources();
 
-    if (!sourceName && activeSource?.name) {
-      logSourceDetail(activeSource?.name, sources[activeSource?.name], true);
+    const activeSourceName = activeSource?.name;
+    if (!sourceName && activeSourceName) {
+      logSourceDetail(sources[activeSourceName], true);
       return;
     }
 
@@ -122,7 +77,7 @@ export async function sourceCommand(sourceName: string = ''): Promise<void> {
       return; 
     }
 
-    logSourceDetail(sourceName, targetSource, sourceName === activeSource?.name);
+    logSourceDetail(targetSource, sourceName === activeSource?.name);
 
   } catch (error) {
     console.error(colors.red(`Error: ${error}`));
@@ -130,7 +85,8 @@ export async function sourceCommand(sourceName: string = ''): Promise<void> {
   }
 }
 
-function logSourceDetail(name: string, config: AnySourceConfig, isActive: boolean) {
+function logSourceDetail(config: AnySourceConfig, isActive: boolean) {
+  const name = config.name;
   const prefix = isActive ? colors.green('● ') : colors.dim('○ ');
   
   console.log(`${prefix}${colors.bold(name)} ${isActive ? colors.green('(active)') : ''}`);
@@ -181,6 +137,31 @@ export async function sourceRenameCommand(oldName: string, newName: string | und
     
     await sourceManager.renameSource(oldName, newName);
     console.log(colors.green(`✓ Renamed source: ${oldName} to ${newName}`));
+  } catch (error) {
+    console.error(colors.red(`Error: ${error}`));
+    process.exit(1);
+  }
+}
+
+export async function sourceRemoveAllCommand(): Promise<void> {
+  try {
+    const sources = await sourceManager.listSources();
+    const sourceNames = Object.keys(sources);
+    
+    if (sourceNames.length === 0) {
+      console.log(colors.yellow('No sources to remove.'));
+      return;
+    }
+
+    console.log(colors.blue(`Removing ${sourceNames.length} source(s)...`));
+    
+    // Remove all sources
+    for (const sourceName of sourceNames) {
+      await sourceManager.removeSource(sourceName);
+      console.log(colors.dim(`  ✓ Removed: ${sourceName}`));
+    }
+    
+    console.log(colors.green(`✓ Successfully removed all ${sourceNames.length} source(s)`));
   } catch (error) {
     console.error(colors.red(`Error: ${error}`));
     process.exit(1);
