@@ -1,6 +1,6 @@
 {
   "name": "rulink",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "CLI tool for managing Cursor AI rules across projects",
   "bin": {
     "rulink": "./bin/rulink.js"
