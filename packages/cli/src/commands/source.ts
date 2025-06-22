@@ -19,7 +19,7 @@ export function registerSourceCommands(cli: CAC) {
     .example(`${NAME} source --rename old-name new-name       Rename a source`)
     .action(async (input: string, options = {}) => {
       if (options.remove) {
-        await sourceRemoveCommand(options);
+        await sourceRemoveCommand(options.remove);
       } else if (options.use) {
         await sourceUseCommand(options.use);
       } else if (options.rename) {
